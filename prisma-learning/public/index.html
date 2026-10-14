@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    :root {
+      --bg-1: #0f0c29;
+      --bg-2: #302b63;
+      --bg-3: #24243e;
+      --card: rgba(255, 255, 255, 0.06);
+      --card-border: rgba(255, 255, 255, 0.12);
+      --text: #f5f7ff;
+      --text-muted: #a4a8c4;
+      --accent: #7c5cff;
+      --accent-2: #22d3ee;
+      --success: #34d399;
+      --error: #f87171;
+      --shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body { height: 100%; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, var(--bg-1), var(--bg-2), var(--bg-3));
+      background-size: 300% 300%;
+      animation: bgShift 18s ease infinite;
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 3rem 1rem;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    @keyframes bgShift {
+      0%, 100% { background-position: 0% 50%; }
+      50%      { background-position: 100% 50%; }
+    }
+
+    /* Ambient glow blobs */
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.35;
+      z-index: 0;
+      pointer-events: none;
+    }
+    body::before {
+      width: 400px; height: 400px;
+      background: var(--accent);
+      top: -100px; left: -100px;
+    }
+    body::after {
+      width: 380px; height: 380px;
+      background: var(--accent-2);
+      bottom: -120px; right: -120px;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 680px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    header h1 {
+      font-size: clamp(1.8rem, 4vw, 2.5rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(90deg, #fff, #c7bcff 50%, #6ee7ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-top: 0.5rem;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.75rem;
+    }
+
+    form .field {
+      margin-bottom: 1.1rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.95rem;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      resize: vertical;
+    }
+
+    input::placeholder,
+    textarea::placeholder { color: #6c7290; }
+
+    input:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: rgba(0, 0, 0, 0.35);
+      box-shadow: 0 0 0 4px rgba(124, 92, 255, 0.18);
+    }
+
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 0.5rem;
+    }
+
+    button[type="submit"] {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.8rem 1.4rem;
+      border: none;
+      border-radius: 12px;
+      font: inherit;
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #fff;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      background-size: 200% 200%;
+      transition: transform 0.15s, box-shadow 0.25s, background-position 0.4s;
+      box-shadow: 0 8px 24px rgba(124, 92, 255, 0.35);
+    }
+
+    button[type="submit"]:hover:not(:disabled) {
+      transform: translateY(-1px);
+      background-position: 100% 0;
+      box-shadow: 0 12px 30px rgba(124, 92, 255, 0.5);
+    }
+
+    button[type="submit"]:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    button[type="submit"]:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+
+    button.loading .spinner { display: inline-block; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #message {
+      min-height: 1.4rem;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--success);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: opacity 0.3s;
+    }
+
+    #message:empty { opacity: 0; }
+
+    #message.error { color: var(--error); }
+
+    .list-section {
+      margin-top: 2rem;
+    }
+
+    .list-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .list-header h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .task-count {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.06);
+      padding: 0.25rem 0.7rem;
+      border-radius: 999px;
+      border: 1px solid var(--card-border);
+    }
+
+    #taskList {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    #taskList li {
+      position: relative;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 14px;
+      padding: 1rem 1.15rem 1rem 1.4rem;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      word-break: break-word;
+      transition: transform 0.2s, border-color 0.2s, background 0.2s;
+      animation: fadeIn 0.35s ease both;
+      overflow: hidden;
+    }
+
+    #taskList li::before {
+      content: "";
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 4px;
+      background: linear-gradient(180deg, var(--accent), var(--accent-2));
+    }
+
+    #taskList li:hover {
+      transform: translateX(4px);
+      border-color: rgba(124, 92, 255, 0.5);
+      background: rgba(255, 255, 255, 0.09);
+    }
+
+    #taskList li.empty {
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+      padding: 2rem 1rem;
+      border-style: dashed;
+    }
+
+    #taskList li.empty::before { display: none; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 1.5rem 0.75rem; }
+      .card { padding: 1.25rem; border-radius: 14px; }
+      button[type="submit"] { width: 100%; justify-content: center; }
+      .actions { justify-content: stretch; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>✨ Task Manager</h1>
+      <p>Stay organized. Stay focused. Get things done.</p>
+    </header>
+
+    <div class="card">
+      <form id="taskForm" autocomplete="off">
+        <div class="field">
+          <label for="title">Task Title</label>
+          <input
+            id="title"
+            name="title"
+            type="text"
+            placeholder="e.g. Design landing page"
+            required
+            maxlength="120"
+          />
+        </div>
+
+        <div class="field">
+          <label for="description">Description</label>
+          <textarea
+            id="description"
+            name="description"
+            rows="3"
+            placeholder="Optional details..."
+            maxlength="500"
+          ></textarea>
+        </div>
+
+        <div class="actions">
+          <button type="submit" id="submitBtn">
+            <span class="spinner" aria-hidden="true"></span>
+            <span class="btn-label">Save Task</span>
+          </button>
+        </div>
+      </form>
+
+      <p id="message" role="status" aria-live="polite"></p>
+    </div>
+
+    <section class="list-section">
+      <div class="list-header">
+        <h2>All Tasks</h2>
+        <span class="task-count" id="taskCount">0</span>
+      </div>
+      <ul id="taskList"></ul>
+    </section>
+  </div>
+
+  <script>
+    const form = document.getElementById("taskForm");
+    const message = document.getElementById("message");
+    const taskList = document.getElementById("taskList");
+    const submitBtn = document.getElementById("submitBtn");
+    const btnLabel = submitBtn.querySelector(".btn-label");
+    const taskCount = document.getElementById("taskCount");
+
+    function setMessage(text, isError = false) {
+      message.textContent = text;
+      message.classList.toggle("error", isError);
+    }
+
+    function setLoading(isLoading) {
+      submitBtn.disabled = isLoading;
+      submitBtn.classList.toggle("loading", isLoading);
+      btnLabel.textContent = isLoading ? "Saving..." : "Save Task";
+    }
+
+    async function loadTasks() {
+      try {
+        const response = await fetch("/tasks");
+
+        if (!response.ok) {
+          throw new Error("Failed to load tasks");
+        }
+
+        const tasks = await response.json();
+        taskList.replaceChildren();
+
+        const list = Array.isArray(tasks) ? tasks : [];
+        taskCount.textContent = list.length;
+
+        if (list.length === 0) {
+          const empty = document.createElement("li");
+          empty.className = "empty";
+          empty.textContent = "No tasks yet — add your first one above! 🚀";
+          taskList.appendChild(empty);
+          return;
+        }
+
+        list.forEach((task) => {
+          const item = document.createElement("li");
+          item.textContent = `${task.title} — ${task.description || "No description"}`;
+          taskList.appendChild(item);
+        });
+      } catch (error) {
+        setMessage(error.message, true);
+      }
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      setMessage("");
+      setLoading(true);
+
+      const title = document.getElementById("title").value.trim();
+      const description = document.getElementById("description").value.trim();
+
+      try {
+        const response = await fetch("/tasks", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, description }),
+        });
+
+        const result = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          throw new Error(result.message || "Failed to save task");
+        }
+
+        setMessage("✓ " + (result.message || "Task saved successfully!"));
+        form.reset();
+        await loadTasks();
+      } catch (error) {
+        setMessage("✕ " + error.message, true);
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    loadTasks();
+  </script>
+</body>
+</html>
